@@ -6,11 +6,16 @@ from dotenv import load_dotenv
 load_dotenv()
 
 
-MODEL = 'gpt-3.5-turbo-0613'
-# MODEL = 'gpt-4-0613'
+# MODEL = 'gpt-3.5-turbo-0613'
+MODEL = 'gpt-4-0613'
 
 
-def llm(messages, functions=None, function_call=None, model=MODEL):
+def llm(
+        messages,
+        functions=None,
+        function_call=None,
+        model=MODEL,
+):
     headers = {
         'Content-Type': 'application/json',
         'Authorization': f'Bearer {getenv("OPENAI_API_KEY")}'
