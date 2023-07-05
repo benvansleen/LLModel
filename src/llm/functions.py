@@ -1,7 +1,53 @@
+import openai
+from enum import Enum
+from typing import List, Optional, Any
 from openai_function_call import openai_function
-from pydantic import BaseModel
+from pydantic import BaseModel, validator
 from om import om
 from documentation_agent import modelica_documentation_lookup
+
+
+class OpenAIRole(str, Enum):
+    system = 'system'
+    assistant = 'assistant'
+    user = 'user'
+    function = 'function'
+
+
+class OpenAIFunctionCall(BaseModel):
+    name: str
+    arguments: str
+
+
+class OpenAIMessage(BaseModel):
+    role: OpenAIRole
+    content: Optional[str]
+    name: Optional[str]
+    function_call: Optional[OpenAIFunctionCall]
+
+    @validator('content')
+    def content_must_be_some(cls, content):
+        return content or ''
+
+
+class OpenAIChoice(BaseModel):
+    index: int
+    message: OpenAIMessage
+    finish_reason: str
+
+
+class OpenAIUsage(BaseModel):
+    prompt_tokens: int
+    completion_tokens: int
+    total_tokens: int
+
+
+class OpenAIResponse(BaseModel):
+    id: str
+    object: str
+    created: int
+    choices: List[OpenAIChoice]
+    usage: OpenAIUsage
 
 
 class ModelicaModel(BaseModel):
@@ -84,16 +130,33 @@ functions = {
     'modelica_documentation': modelica_documentation,
 }
 
-function_schemas = [f.openai_schema for f in functions.values()]
+schemas = [f.openai_schema for f in functions.values()]
 
 
-def dispatch_function(response) -> dict[str, str]:
-    try:
-        name = response.choices[0].message.function_call.name
-        return {
-            'role': 'function',
-            'name': name,
-            'content': functions[name].from_response(response),
-        }
-    except:
-        import pdb; pdb.set_trace()
+def dispatch_function(
+        response: OpenAIResponse,
+) -> OpenAIMessage:
+    from copy import deepcopy
+    response = deepcopy(response)
+    name = response.choices[0].message.function_call.name
+    for choice in response.choices:
+        choice.message.function_call = dict(
+            choice.message.function_call,
+        )
+        choice.message = dict(choice.message)
+    result = functions[name].from_response(response)
+    return {
+        'role': 'function',
+        'name': name,
+        'content': result,
+    }
+
+
+def llm(chain, model='gpt-3.5-turbo-0613'):
+    return OpenAIResponse(
+        **openai.ChatCompletion.create(
+            model=model,
+            messages=chain.serialize(),
+            functions=schemas,
+        ).to_dict()
+    )
