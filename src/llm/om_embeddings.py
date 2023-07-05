@@ -30,7 +30,7 @@ class SentenceTransformerEmbeddings:
         return
 
 
-    def embed_fn(self, sentences):
+    def embed_fn(self, sentences: list[str]) -> torch.Tensor:
         encoded_input = self.tokenizer(
             sentences,
             padding=True,
@@ -48,15 +48,21 @@ class SentenceTransformerEmbeddings:
             encoded_input['attention_mask'],
         )
 
-    def embed_documents(self, documents):
+    def embed_documents(
+            self,
+            documents: list[str],
+    ) -> list[list[float]]:
         return self.embed_fn(documents).tolist()
 
-    def embed_query(self, query):
+    def embed_query(self, query: str) -> list[float]:
         return self.embed_fn([query]).tolist()[0]
 
     # Mean Pooling - Take attention mask into account for correct averaging
     @staticmethod
-    def mean_pooling(model_output, attention_mask):
+    def mean_pooling(
+            model_output: torch.Tensor,
+            attention_mask: torch.Tensor,
+    ) -> torch.Tensor:
         # First element of model_output contains all token embeddings
         token_embeddings = model_output[0]
         input_mask_expanded = (attention_mask
@@ -90,8 +96,6 @@ if not os.path.exists('data/om_embeddings'):
             '\nfunction',
             '\nannotation',
             '\n\n',
-            # ' ',
-            # '',
         ],
     ).split_documents(loader.load())
 
