@@ -17,7 +17,10 @@ def prompt_user():
     }
 
 
-def handle_response(response, messages):
+def handle_response(
+        response: f.OpenAIResponse,
+        messages: Chain,
+) -> Chain:
     first_choice = response.choices[0]
     messages.add(first_choice.message)
 
