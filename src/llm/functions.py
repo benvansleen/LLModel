@@ -1,10 +1,12 @@
 import openai
+from copy import deepcopy
 from enum import Enum
 from typing import List, Optional, Any
 from openai_function_call import openai_function
 from pydantic import BaseModel, validator
 from om import om
 from documentation_agent import modelica_documentation_lookup
+from chain import Chain
 
 
 class OpenAIRole(str, Enum):
@@ -26,7 +28,7 @@ class OpenAIMessage(BaseModel):
     function_call: Optional[OpenAIFunctionCall]
 
     @validator('content')
-    def content_must_be_some(cls, content):
+    def content_must_be_some(cls, content: str) -> str:
         return content or ''
 
 
@@ -136,7 +138,6 @@ schemas = [f.openai_schema for f in functions.values()]
 def dispatch_function(
         response: OpenAIResponse,
 ) -> OpenAIMessage:
-    from copy import deepcopy
     response = deepcopy(response)
     name = response.choices[0].message.function_call.name
     for choice in response.choices:
@@ -145,14 +146,17 @@ def dispatch_function(
         )
         choice.message = dict(choice.message)
     result = functions[name].from_response(response)
-    return {
+    return OpenAIMessage(**{
         'role': 'function',
         'name': name,
         'content': result,
-    }
+    })
 
 
-def llm(chain, model='gpt-3.5-turbo-0613'):
+def llm(
+        chain: Chain,
+        model: str = 'gpt-3.5-turbo-0613',
+) -> OpenAIResponse:
     return OpenAIResponse(
         **openai.ChatCompletion.create(
             model=model,
