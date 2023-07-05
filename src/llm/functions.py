@@ -1,12 +1,10 @@
 import openai
-from copy import deepcopy
 from enum import Enum
 from typing import List, Optional, Any
 from openai_function_call import openai_function
 from pydantic import BaseModel, validator
 from om import om
 from documentation_agent import modelica_documentation_lookup
-from chain import Chain
 
 
 class OpenAIRole(str, Enum):
@@ -138,7 +136,7 @@ schemas = [f.openai_schema for f in functions.values()]
 def dispatch_function(
         response: OpenAIResponse,
 ) -> OpenAIMessage:
-    response = deepcopy(response)
+    response = response.copy(deep=True)
     name = response.choices[0].message.function_call.name
     for choice in response.choices:
         choice.message.function_call = dict(
@@ -152,6 +150,8 @@ def dispatch_function(
         'content': result,
     })
 
+
+from chain import Chain
 
 def llm(
         chain: Chain,

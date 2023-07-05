@@ -35,7 +35,7 @@ def handle_response(
 
 
 def prompt_step(messages: Chain = Chain()):
-    if len(messages) == 1:
+    if len(messages) <= 1:
         messages.add(prompt_user())
 
     response = f.llm(messages, model='gpt-4-0613')
