@@ -1,15 +1,17 @@
-#! /bin/bash
-
-BASEDIR=$(dirname "$0")
-TARGET=$BASEDIR/.venv/lib/python3.10/site-packages/numpy
+#! /bin/bash -i
 
 
-if ! [ $(readlink $TARGET) ]; then
-    echo "Linking to guix numpy binaries"
-    NUMPY_LIB=$(guix build python-numpy)
-    rm -r $TARGET
-    ln -s $NUMPY_LIB/lib/python3.10/site-packages/numpy $TARGET
+if ls /gnu &>/dev/null; then
+    BASEDIR=$(dirname "$0")
+    TARGET=$BASEDIR/.venv/lib/python3.10/site-packages/numpy
+
+    if ! [ $(readlink $TARGET) ]; then
+        echo "Linking to guix numpy binaries"
+        NUMPY_LIB=$(guix build python-numpy)
+        rm -r $TARGET
+        ln -s $NUMPY_LIB/lib/python3.10/site-packages/numpy $TARGET
+    fi
 fi
 
 
-poetry run python src/llm
+poetry run python src/llm $@

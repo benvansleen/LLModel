@@ -1,1 +1,24 @@
-poetry run uvicorn src.__main__:app --reload
+#! /bin/bash
+
+
+RUN=/bin/bash
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        llm)
+            RUN=./run-llm
+            shift
+            ;;
+        *)
+            echo "Unknown argument: $1"
+            exit 1
+            ;;
+    esac
+done
+
+docker run -it --rm \
+       -e XDG_RUNTIME_DIR=/tmp \
+       -e WAYLAND_DISPLAY=$WAYLAND_DISPLAY \
+       -v $XDG_RUNTIME_DIR/$WAYLAND_DISPLAY:/tmp/$WAYLAND_DISPLAY \
+       -v ${PWD}:/home/om/llmodel \
+       om-python:latest \
+       $RUN

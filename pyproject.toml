@@ -9,12 +9,29 @@ readme = "README.md"
 python = "^3.10"
 openai = "^0.27.8"
 reactpy = {extras = ["starlette"], version = "^1.0.1"}
-control = "^0.9.4"
 langchain = "^0.0.206"
+numpy = "^1.25.0"
+python-dotenv = "^1.0.0"
+requests = "^2.31.0"
+tiktoken = "^0.4.0"
+termcolor = "^2.3.0"
+tenacity = "^8.2.2"
+chromadb = "^0.3.26"
+ompython = "^3.4.0"
+pyzmq = "^25.1.0"
+torch = {version = "^2.0.1+cpu", source = "pytorch"}
+transformers = "^4.30.2"
+openai-function-call = "^0.0.5"
 
 
 [tool.poetry.group.dev.dependencies]
 autopep8 = "^2.0.2"
+
+
+[[tool.poetry.source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+priority = "explicit"
 
 [build-system]
 requires = ["poetry-core"]
