@@ -4,87 +4,6 @@ from om import om
 from documentation_agent import modelica_documentation_lookup
 
 
-# functions = [
-#     {
-#         'name': 'modelica_documentation_lookup',
-#         'description': 'Consult the documentation for the Modelica Standard Library. Use keywords (like specific function or object names) to find examples and best practices.',
-#         'parameters': {
-#             'type': 'object',
-#             'properties': {
-#                 'search_query': {
-#                     'type': 'string',
-#                     'description': 'The search query to use when searching the documentation.',
-#                 },
-#             },
-#             'required': ['search_query'],
-#         },
-#     },
-
-#     {
-#         'name': 'define_model',
-#         'description': 'Define a Modelica model object',
-#         'parameters': {
-#             'type': 'object',
-#             'properties': {
-#                 'name': {
-#                     'type': 'string',
-#                     'description': 'The name of the NonlinearIOSystem object.',
-#                 },
-#                 'parameters': {
-#                     'type': 'string',
-#                     'description': 'The parameters of the model object. All named variables or parameters MUST be defined here. Example:\nparameter Modelica.Units.SI.Distance s = 100;\nparameter Modelica.Units.SI.Velocity v = 10;\nReal x(start = s, fixed = true);',
-#                 },
-#                 'equation': {
-#                     'type': 'string',
-#                     'description': 'The equation of the model object. MUST NOT contain any variable declarations. Example:\nder(x) = v;\nx = s + v * t;',
-#                 },
-#             },
-#             'required': ['name', 'parameters', 'equation'],
-#         },
-#     },
-
-#     {
-#         'name': 'simulate',
-#         'description': 'Run a simulation on a given model object',
-#         'parameters': {
-#             'type': 'object',
-#             'properties': {
-#                 'modelName': {
-#                     'type': 'string',
-#                     'description': 'The name of the model object to simulate.',
-#                 },
-#                 'stopTime': {
-#                     'type': 'number',
-#                     'description': 'The time at which to stop the simulation.',
-#                 },
-#             },
-#             'required': ['modelName', 'stopTime'],
-#         },
-#     },
-
-#     {
-#         'name': 'plot',
-#         'description': 'Plot the results of a simulation',
-#         'parameters': {
-#             'type': 'object',
-#             'properties': {
-#                 'variable_list': {
-#                     'type': 'string',
-#                     'description': 'A comma-separated string representing the list of variables to plot. Example:\nx,der(x),v',
-#                 },
-#             },
-#             'required': ['variable_list'],
-#                 #     'type': 'array',
-#                 #     'description': 'The list of variables to plot. Example:\n{ x, der(x) }',
-#                 #     'items': {
-#                 #         'type': 'string',
-#                 #     },
-#                 # },
-#         },
-#     },
-# ]
-
-
 class ModelicaModel(BaseModel):
     '''
     parameters: The parameters of the model object. All named variables or parameters MUST be defined here.
@@ -171,22 +90,10 @@ function_schemas = [f.openai_schema for f in functions.values()]
 def dispatch_function(response) -> dict[str, str]:
     try:
         name = response.choices[0].message.function_call.name
-        result = functions[name].from_response(response)
-        # match name:
-        #     case 'modelica_documentation':
-        #         return modelica_documentation.from_response(response)
-        #     case 'define_model':
-        #         result = define_model.from_response(response)
-        #     case 'simulate':
-        #         result = simulate.from_response(response)
-        #     case 'plot':
-        #         result = plot.from_response(response)
-        #     case _:
-        #         raise ValueError(f'Function "{response}" not found.')
         return {
             'role': 'function',
             'name': name,
-            'content': result,
+            'content': functions[name].from_response(response),
         }
     except:
         import pdb; pdb.set_trace()
