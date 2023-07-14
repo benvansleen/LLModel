@@ -1,6 +1,8 @@
 from dotenv import load_dotenv
 load_dotenv()
+
 import functions as f
+from openai_models import OpenAIResponse
 from chain import Chain
 from om import om
 
@@ -18,7 +20,7 @@ def prompt_user():
 
 
 def handle_response(
-        response: f.OpenAIResponse,
+        response: OpenAIResponse,
         messages: Chain,
 ) -> Chain:
     first_choice = response.choices[0]
@@ -49,5 +51,5 @@ while True:
     try:
         prompt_step()
     except KeyboardInterrupt:
-        # import pdb; pdb.set_trace()
-        import sys; sys.exit()
+        from sys import exit
+        exit()
