@@ -1,8 +1,8 @@
 import os
-from functions import OpenAIMessage
+import documentation_agent as docs
+from openai_models import OpenAIMessage
 from sys import argv
-from termcolor import colored, cprint
-from documentation_agent import consult_modelica_documentation
+from termcolor import colored
 from pydantic import BaseModel, Field
 
 
@@ -11,9 +11,9 @@ class Chain(BaseModel):
 
     @staticmethod
     def wrap_prompt_in_context(prompt):
-        context = consult_modelica_documentation(prompt)
+        # context = consult_modelica_documentation(prompt)
+        context = docs.modelica_documentation_lookup(prompt)
         return f'{context}\n\nGOAL: {prompt}'
-
 
     def __init__(self, system=None):
         super().__init__()

@@ -1,68 +1,38 @@
 import openai
-from enum import Enum
-from typing import List, Optional, Any
 from openai_function_call import openai_function
-from pydantic import BaseModel, validator
+from pydantic import BaseModel, Field
 from om import om
 from documentation_agent import modelica_documentation_lookup
-
-
-class OpenAIRole(str, Enum):
-    system = 'system'
-    assistant = 'assistant'
-    user = 'user'
-    function = 'function'
-
-
-class OpenAIFunctionCall(BaseModel):
-    name: str
-    arguments: str
-
-
-class OpenAIMessage(BaseModel):
-    role: OpenAIRole
-    content: Optional[str]
-    name: Optional[str]
-    function_call: Optional[OpenAIFunctionCall]
-
-    @validator('content')
-    def content_must_be_some(cls, content: str) -> str:
-        return content or ''
-
-
-class OpenAIChoice(BaseModel):
-    index: int
-    message: OpenAIMessage
-    finish_reason: str
-
-
-class OpenAIUsage(BaseModel):
-    prompt_tokens: int
-    completion_tokens: int
-    total_tokens: int
-
-
-class OpenAIResponse(BaseModel):
-    id: str
-    object: str
-    created: int
-    choices: List[OpenAIChoice]
-    usage: OpenAIUsage
+from openai_models import OpenAIMessage, OpenAIResponse
+from chain import Chain
 
 
 class ModelicaModel(BaseModel):
     '''
-    parameters: The parameters of the model object. All named variables or parameters MUST be defined here.
-    Example:
-    [parameter Modelica.Units.SI.Distance s = 100, parameter Modelica.Units.SI.Velocity v = 10, Real x(start = s, fixed = true)]
-
-    equation: The equations relating the parameters of the model object. This section defines an ordinary differential equation governing the behavior of the model. It MUST NOT contain any variable declarations. MAKE SURE ALL VARIABLES USED ARE IN SCOPE!
-    Example:
-    [der(x) = v, x = s + v * t]
+    Modelica model definition. These models are used to simulate and plot real-life systems. Example:
+    model Vehicle
+        parameter Real m = 1000 "Mass of the vehicle";
+        parameter Real F = 3000 "Force applied to the vehicle";
+        Real v(start = 0) "Velocity of the vehicle";
+        Real a "Acceleration of the vehicle";
+    equation
+        m * der(v) = F;
+        a = der(v);
+    end Vehicle;
     '''
-    name: str
-    parameters: list[str]
-    equations: list[str]
+    name: str = Field(
+        description='Name of the model. Example: Vehicle',
+    )
+
+    parameters: list[str] = Field(
+        description='''The parameters of the model object. All named variables or parameters MUST be defined here. DO NOT include any semicolons (;)
+Example: [parameter Modelica.Units.SI.Distance s = 100, parameter Modelica.Units.SI.Velocity v = 10, Real x(start = s, fixed = true)]''',
+    )
+
+    equations: list[str] = Field(
+        description='''The equations relating the parameters of the model object. This section defines an ordinary differential equation governing the behavior of the model. It MUST NOT contain any variable declarations. MAKE SURE ALL VARIABLES USED ARE IN SCOPE! DO NOT include any semicolons (;)
+Example: [der(x) = v, x = s + v * t] ''',
+    )
 
 
 @openai_function
@@ -79,13 +49,18 @@ def define_model(model_spec: ModelicaModel) -> str:
         {equations};
         end {model_spec.name};
         '''
+        model = model.replace(';;', ';')
         print(model)
+        import pdb; pdb.set_trace()
         output = om(model)
         print(output)
         return str(output)
     except ParseException as e:
         print(e)
-        return str(e)
+        return f'Parsing error! Invalid code! {e}'
+
+# print(define_model.openai_schema)
+# import sys; sys.exit()
 
 
 @openai_function
@@ -122,7 +97,6 @@ def modelica_documentation(search_query: str) -> str:
     return modelica_documentation_lookup(search_query)
 
 
-
 functions = {
     'define_model': define_model,
     'simulate': simulate,
@@ -150,8 +124,6 @@ def dispatch_function(
         'content': result,
     })
 
-
-from chain import Chain
 
 def llm(
         chain: Chain,
