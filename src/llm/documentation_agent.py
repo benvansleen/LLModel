@@ -102,3 +102,11 @@ def consult_modelica_documentation(search_query):
     #     final_output = agent_executor(search_query)
     #     chain = buf.getvalue()
     # return f'{chain}\n\nRESULT:\n{final_output}\n\n'
+
+
+if __name__ == '__main__':
+    while True:
+        print('> ', end='')
+        # print(consult_modelica_documentation(input()))
+        print(modelica_documentation_lookup(input()))
+        print('\n---\n')
