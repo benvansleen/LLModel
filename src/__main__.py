@@ -1,18 +1,53 @@
-from reactpy import run, html
-from reactpy.backend.starlette import configure, Options
-from starlette.applications import Starlette
-from .frontend import App
+from dotenv import load_dotenv
+load_dotenv()
+import functions as f
+from chain import Chain
+from om import om
 
 
-app = Starlette()
-configure(app, App, Options(head=html.head(
-    html.title('LLModel'),
-    html.link(dict(
-        rel='stylesheet',
-        href='https://cdn.jsdelivr.net/npm/daisyui@3.1.1/dist/full.css',
-        type='text/css',
-    )),
-    html.script(dict(
-        src='https://cdn.tailwindcss.com',
-    )),
-)))
+print(om('getVersion()'))
+
+
+def prompt_user():
+    print('> ', end='')
+    return {
+        'role': 'user',
+        'content': input(),
+        # 'content': wrap_prompt_in_context(input()),
+    }
+
+
+def handle_response(
+        response: f.OpenAIResponse,
+        messages: Chain,
+) -> Chain:
+    first_choice = response.choices[0]
+    messages.add(first_choice.message)
+
+    match first_choice.finish_reason:
+        case 'function_call':
+            result = f.dispatch_function(response)
+        case _:
+            result = prompt_user()
+
+    messages.add(result)
+    return messages
+
+
+def prompt_step(messages: Chain = Chain()):
+    if len(messages) <= 1:
+        messages.add(prompt_user())
+
+    response = f.llm(messages, model='gpt-4-0613')
+    messages.print(clear=True)
+    messages = handle_response(response, messages)
+    messages.print(clear=True)
+    return
+
+
+while True:
+    try:
+        prompt_step()
+    except KeyboardInterrupt:
+        # import pdb; pdb.set_trace()
+        import sys; sys.exit()

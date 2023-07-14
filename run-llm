@@ -14,4 +14,4 @@ if ls /gnu &>/dev/null; then
 fi
 
 
-poetry run python src/llm $@
+poetry run python src $@
