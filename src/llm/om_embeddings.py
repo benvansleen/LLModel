@@ -91,11 +91,11 @@ if not os.path.exists('data/om_embeddings'):
         chunk_size=3000,
         chunk_overlap=0,
         separators=[
-            '\nmodel',
-            '\nblock',
-            '\nfunction',
-            '\nannotation',
-            '\n\n',
+            '\nmodel ',
+            '\nblock ',
+            '\nfunction ',
+            # '\nannotation',
+            # '\n\n',
         ],
     ).split_documents(loader.load())
 
@@ -108,7 +108,7 @@ if not os.path.exists('data/om_embeddings'):
     )
 
     for begin, end in tqdm(zip(
-            range(chunk, len(docs) - chunk, chunk),
+            range(chunk, len(docs), chunk),
             range(chunk * 2, len(docs), chunk),
     ), total=len(docs) // chunk):
         db.add_texts(
