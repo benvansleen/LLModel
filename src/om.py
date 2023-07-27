@@ -8,12 +8,12 @@ omc.sendExpression('loadModel(Modelica)')
 
 def om(expr: str):
     cwd = os.getcwd()
-    os.chdir('/tmp')
 
-    result = omc.sendExpression(expr)
-    error = omc.sendExpression('getErrorString()')
-    if error != '""\n':
-        print(error)
+    try:
+        os.chdir('/tmp')
+        result = omc.sendExpression(expr)
+    finally:
+        error = omc.sendExpression('getErrorString()')
+        os.chdir(cwd)
 
-    os.chdir(cwd)
     return f'{result}\n{error}'
