@@ -43,3 +43,13 @@ class OpenAIResponse(BaseModel):
     created: int
     choices: list[OpenAIChoice]
     usage: OpenAIUsage
+
+    def prepare_for_function_call(self):
+        new = self.copy(deep=True)
+        name = new.choices[0].message.function_call.name
+        for choice in new.choices:
+            choice.message.function_call = dict(
+                choice.message.function_call,
+            )
+            choice.message = dict(choice.message)
+        return name, new

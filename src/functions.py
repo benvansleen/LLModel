@@ -110,19 +110,13 @@ schemas = [f.openai_schema for f in functions.values()]
 def dispatch_function(
         response: OpenAIResponse,
 ) -> OpenAIMessage:
-    response = response.copy(deep=True)
-    name = response.choices[0].message.function_call.name
-    for choice in response.choices:
-        choice.message.function_call = dict(
-            choice.message.function_call,
-        )
-        choice.message = dict(choice.message)
+    name, response = response.prepare_for_function_call()
     result = functions[name].from_response(response)
-    return OpenAIMessage(**{
-        'role': 'function',
-        'name': name,
-        'content': result,
-    })
+    return OpenAIMessage(
+        role='function',
+        name=name,
+        content=result,
+    )
 
 
 def llm(
