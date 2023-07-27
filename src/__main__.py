@@ -2,7 +2,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 import functions as f
-from openai_models import OpenAIResponse
+from openai_models import OpenAIMessage, OpenAIResponse
 from chain import Chain
 from om import om
 
@@ -10,46 +10,75 @@ from om import om
 print(om('getVersion()'))
 
 
-def prompt_user():
+def prompt_user(wrap_in_context: bool = False) -> OpenAIMessage:
     print('> ', end='')
-    return {
-        'role': 'user',
-        'content': input(),
-        # 'content': wrap_prompt_in_context(input()),
-    }
+    prompt = input()
+    if wrap_in_context:
+        prompt = Chain.wrap_prompt_in_context(prompt)
+    return OpenAIMessage(
+        role='user',
+        content=prompt,
+    )
+
+
+def run_testbench(testbench: str) -> str:
+    print(f'Testbench: {testbench}')
+    print('Run? (y/n)')
+    print('> ', end='')
+    y_or_n = input().strip()
+    match y_or_n:
+        case 'y':
+            from pyparsing.exceptions import ParseException
+            try:
+                result = om(testbench)
+                return result
+            except ParseException as e:
+                print(e)
+                return f'{e}\nSomething went wrong... Think about it step by step...'
+        case 'n':
+            pass
+        case _:
+            print('Invalid input. Try again.')
+            run_testbench(testbench)
+    return ''
 
 
 def handle_response(
         response: OpenAIResponse,
-        messages: Chain,
+        chain: Chain,
 ) -> Chain:
     first_choice = response.choices[0]
-    messages.add(first_choice.message)
+    chain.add(first_choice.message)
 
     match first_choice.finish_reason:
         case 'function_call':
             result = f.dispatch_function(response)
+            if result.content.startswith('('):
+                result.content = run_testbench(chain.testbench)
+                print(result.content)
+                result.content += '\n' + prompt_user().content
         case _:
             result = prompt_user()
 
-    messages.add(result)
+    chain.add(result)
+    return chain
+
+
+def prompt_step(chain: Chain) -> Chain:
+    if len(chain) <= 1:
+        chain.add(prompt_user(wrap_in_context=True))
+
+    response = f.llm(chain, model='gpt-4-0613')
+    chain.print(clear=True)
+    messages = handle_response(response, chain)
+    messages.print(clear=True)
     return messages
 
 
-def prompt_step(messages: Chain = Chain()):
-    if len(messages) <= 1:
-        messages.add(prompt_user())
-
-    response = f.llm(messages, model='gpt-4-0613')
-    messages.print(clear=True)
-    messages = handle_response(response, messages)
-    messages.print(clear=True)
-    return
-
-
+chain = Chain()
 while True:
     try:
-        prompt_step()
+        chain = prompt_step(chain)
     except KeyboardInterrupt:
         from sys import exit
         exit()

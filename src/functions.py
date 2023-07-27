@@ -25,12 +25,12 @@ class ModelicaModel(BaseModel):
     )
 
     parameters: list[str] = Field(
-        description='''The parameters of the model object. All named variables or parameters MUST be defined here. DO NOT include any semicolons (;)
+        description='''The parameters of the model object. All named variables or parameters MUST be defined here. DO NOT include any semicolons (;) or docstring comments. This is where ALL components (resistors, capacitors, ...), variables, inputs, etc must be declared!
 Example: [parameter Modelica.Units.SI.Distance s = 100, parameter Modelica.Units.SI.Velocity v = 10, Real x(start = s, fixed = true)]''',
     )
 
     equations: list[str] = Field(
-        description='''The equations relating the parameters of the model object. This section defines an ordinary differential equation governing the behavior of the model. It MUST NOT contain any variable declarations. MAKE SURE ALL VARIABLES USED ARE IN SCOPE! DO NOT include any semicolons (;)
+        description='''The equations relating the parameters of the model object. This section defines an ordinary differential equation governing the behavior of the model. It MUST NOT contain any component (resistors, capacitors, etc), variable, or input declarations!
 Example: [der(x) = v, x = s + v * t] ''',
     )
 
@@ -40,27 +40,33 @@ def define_model(model_spec: ModelicaModel) -> str:
     '''Define a Modelica model object'''
     from pyparsing.exceptions import ParseException
     try:
-        parameters = ';\n'.join(model_spec.parameters)
-        equations = ';\n'.join(model_spec.equations)
+        parameters = ';\n    '.join([
+            p for p in model_spec.parameters
+            if len(p) > 1
+        ])
+        equations = ';\n    '.join([
+            e for e in model_spec.equations
+            if len(e) > 1
+        ])
+
         model = f'''
-        model {model_spec.name}
-        {parameters};
-        equation
-        {equations};
-        end {model_spec.name};
+model {model_spec.name}
+    {parameters};
+equation
+    {equations};
+end {model_spec.name};
         '''
+
         model = model.replace(';;', ';')
         print(model)
-        import pdb; pdb.set_trace()
         output = om(model)
         print(output)
         return str(output)
     except ParseException as e:
-        print(e)
-        return f'Parsing error! Invalid code! {e}'
-
-# print(define_model.openai_schema)
-# import sys; sys.exit()
+        return f'''
+Parsing error! Invalid code! {e}
+Are you making sure to declare all components, variables, and parameters exclusively in the parameters section?
+{input()}'''
 
 
 @openai_function
@@ -110,19 +116,13 @@ schemas = [f.openai_schema for f in functions.values()]
 def dispatch_function(
         response: OpenAIResponse,
 ) -> OpenAIMessage:
-    response = response.copy(deep=True)
-    name = response.choices[0].message.function_call.name
-    for choice in response.choices:
-        choice.message.function_call = dict(
-            choice.message.function_call,
-        )
-        choice.message = dict(choice.message)
+    name, response = response.prepare_for_function_call()
     result = functions[name].from_response(response)
-    return OpenAIMessage(**{
-        'role': 'function',
-        'name': name,
-        'content': result,
-    })
+    return OpenAIMessage(
+        role='function',
+        name=name,
+        content=result,
+    )
 
 
 def llm(
@@ -134,5 +134,6 @@ def llm(
             model=model,
             messages=chain.serialize(),
             functions=schemas,
+            temperature=0.0,
         ).to_dict()
     )

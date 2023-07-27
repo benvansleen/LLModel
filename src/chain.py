@@ -4,18 +4,19 @@ from openai_models import OpenAIMessage
 from sys import argv
 from termcolor import colored
 from pydantic import BaseModel, Field
+from om import om
 
 
 class Chain(BaseModel):
     messages: list[OpenAIMessage] = Field(default=[])
+    testbench: str | None = Field(default=None)
 
     @staticmethod
     def wrap_prompt_in_context(prompt):
-        # context = consult_modelica_documentation(prompt)
         context = docs.modelica_documentation_lookup(prompt)
         return f'{context}\n\nGOAL: {prompt}'
 
-    def __init__(self, system=None):
+    def __init__(self, system: str | None = None):
         super().__init__()
         self.messages = [OpenAIMessage(
             role='system',
@@ -23,27 +24,49 @@ class Chain(BaseModel):
         )]
 
         if len(argv) > 1:
-            self.messages.append(OpenAIMessage(
-                role='user',
-                content=self.wrap_prompt_in_context(
-                    ' '.join(argv[1:])
-                ),
-            ))
+            self.prepare_testbench(argv[1])
+
         return
 
-    def add(self, message):
+    def prepare_testbench(self, testbench: str):
+        with open(f'tests/{testbench}.mo', 'r') as f:
+            lines = f.readlines()
+            to_be_implemented = lines[0].strip()
+            desired_behavior = lines[1].strip()
+            final_command = lines[-1].strip()
+            usage = ''.join(lines[2:-1])
+        om(usage)
+        self.testbench = final_command
+
+        prompt = f'''
+The user wants to run the following model with this desired behavior:
+{desired_behavior}
+DO NOT attempt to redefine it:
+{usage}
+{final_command}
+
+Implement the following model:
+{to_be_implemented}'''
+
+        self.add(OpenAIMessage(
+            role='user',
+            content=self.wrap_prompt_in_context(prompt),
+        ))
+        return
+
+    def add(self, message: OpenAIMessage | dict[str, str]):
         if not isinstance(message, OpenAIMessage):
             message = OpenAIMessage(**message)
         self.messages.append(message)
         return
 
-    def serialize(self):
+    def serialize(self) -> list[dict[str, str]]:
         return [
             m.dict(exclude_unset=True)
             for m in self.messages
         ]
 
-    def __len__(self):
+    def __len__(self) -> int:
         return len(self.messages)
 
     def print(self, clear=True):

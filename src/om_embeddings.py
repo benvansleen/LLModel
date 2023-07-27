@@ -10,16 +10,8 @@ from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain.vectorstores import Chroma
 
 
-
-# tokenizer = AutoTokenizer.from_pretrained(
-#     'sentence-transformers/all-mpnet-base-v2'
-# )
-# model = AutoModel.from_pretrained(
-#     'sentence-transformers/all-mpnet-base-v2'
-# )
-
-
 class SentenceTransformerEmbeddings:
+
     def __init__(self):
         self.tokenizer = AutoTokenizer.from_pretrained(
             'sentence-transformers/all-mpnet-base-v2',
@@ -28,7 +20,6 @@ class SentenceTransformerEmbeddings:
             'sentence-transformers/all-mpnet-base-v2',
         )
         return
-
 
     def embed_fn(self, sentences: list[str]) -> torch.Tensor:
         encoded_input = self.tokenizer(
@@ -98,7 +89,6 @@ if not os.path.exists('data/om_embeddings'):
             # '\n\n',
         ],
     ).split_documents(loader.load())
-
 
     chunk = 100
     db = Chroma.from_documents(
