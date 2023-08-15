@@ -30,8 +30,7 @@ def run_testbench(testbench: str) -> str:
         case 'y':
             from pyparsing.exceptions import ParseException
             try:
-                result = om(testbench)
-                return result
+                return om(testbench)
             except ParseException as e:
                 print(e)
                 return f'{e}\nSomething went wrong... Think about it step by step...'
