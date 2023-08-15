@@ -39,7 +39,7 @@ def run_testbench(testbench: str) -> str:
             pass
         case _:
             print('Invalid input. Try again.')
-            run_testbench(testbench)
+            return run_testbench(testbench)
     return ''
 
 
