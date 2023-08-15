@@ -66,6 +66,27 @@ Implement the following model:
             for m in self.messages
         ]
 
+    def reload_context(self):
+        self.messages = self.messages[:2] + self.messages[-2:]
+
+        try:
+            root = '../'
+            model_file = [
+                f for f in os.listdir(root)
+                if f.startswith('llm_')
+            ][0]
+            with open(f'{root}{model_file}', 'r') as f:
+                self.add(OpenAIMessage(
+                    role='user',
+                    content=f'Current model definition:\n{f.read()}',
+                ))
+
+        except FileNotFoundError as e:
+            pass
+
+        finally:
+            return
+
     def __len__(self) -> int:
         return len(self.messages)
 

@@ -68,7 +68,14 @@ def prompt_step(chain: Chain) -> Chain:
     if len(chain) <= 1:
         chain.add(prompt_user(wrap_in_context=True))
 
-    response = f.llm(chain, model='gpt-4-0613')
+    if len(chain) > 10:
+        chain.reload_context()
+
+    response = f.llm(
+        chain,
+        model='gpt-4-0613',
+        temperature=0.2,
+    )
     chain.print(clear=True)
     messages = handle_response(response, chain)
     messages.print(clear=True)
