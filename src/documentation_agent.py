@@ -8,7 +8,6 @@ from langchain.agents.agent_toolkits import (
     VectorStoreRouterToolkit,
     VectorStoreInfo,
 )
-# from om_embeddings import embed_fn, db
 
 load_dotenv()
 
