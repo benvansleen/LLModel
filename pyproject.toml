@@ -8,7 +8,6 @@ readme = "README.md"
 [tool.poetry.dependencies]
 python = "^3.10"
 openai = "^0.27.8"
-reactpy = {extras = ["starlette"], version = "^1.0.1"}
 langchain = "^0.0.206"
 numpy = "^1.25.0"
 python-dotenv = "^1.0.0"
