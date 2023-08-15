@@ -1,0 +1,19 @@
+#+author: Benjamin Van Sleen
+#+date: August 15, 2023
+#+title: LLModelica
+# #+subtitle: Reproducible Software Environments and Composable LLM Tools
+#+subtitle: Investigating LLMs' understanding of composition in systems design
+#+options: toc:t num:t
+#+latex_class: article
+#+latex_header: \usepackage[margin=1in]{geometry}
+#+latex_header: \usepackage{customTitle}
+#+latex_header: \project{}
+#+latex_header: \supervisor{Dr. Sandeep \textsc{Neema}}
+#+latex_header: \let\oldsection\section
+#+latex_header: \renewcommand\section{\clearpage\oldsection}
+#+latex_header: \usepackage[parfill]{parskip}
+#+latex_header: \setcounter{secnumdepth}{0}
+
+
+* Introduction
+Large-language models (LLMs) optimized for human-interaction (e.g. ``chat'' models) have taken the programming world by storm in recent months. ChatGPT and GitHub Copilot have demonstrated that LLMs can be used to generate useful code snippets and even entire programs.
