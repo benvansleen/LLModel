@@ -1,0 +1,47 @@
+% Copyright note: This package defines how titles should
+% be typeset at the columbidae University
+% Please check for updates
+\ProvidesPackage{customTitle}[2015/08/10 v.01 an
+example package^^J for wikibooks]
+\RequirePackage{graphicx}
+\newcommand*{\project}[1]{\gdef\@project{#1}%
+}
+\newcommand*{\@project}{Final Year Project}
+\newcommand*{\supervisor}[1]{\gdef\@supervisor{#1}%
+}
+\newcommand*{\@supervisor}{\texttt{\string\supervisor} currently
+not set. Please fix this.}
+\renewcommand*{\maketitle}{%
+  \begin{titlepage}
+    {\raggedleft%
+      %% \includegraphics[width=3cm]{example-image-16x9}\par
+    }\vspace{1cm}
+    \centering
+        {\scshape\LARGE Vanderbilt University \par}
+        \vspace{1cm}
+               {\scshape\Large\@project\unskip\strut\par}
+               \vspace{1.5cm}
+                      {\huge\textbf\@title\unskip\strut\par}
+                      \vspace{2cm}
+                             {\Large\itshape\@author\unskip\strut\par}
+                             \vfill
+                             supervised by\par
+                             \@supervisor\unskip\strut\par
+
+                             \vfill
+
+                             {\large \@date\par}
+  \end{titlepage}
+}
+
+\let\oldtoc\tableofcontents
+\renewcommand{\tableofcontents}{
+  \hypersetup{pdfborder=0 0 0}
+  \oldtoc
+  \thispagestyle{empty}
+  \cleardoublepage
+  %% \setcounter{page}{0}
+  \pagenumbering{arabic}
+}
+
+\endinput
