@@ -1,4 +1,5 @@
 # LLModel
+![Diagram](paper/images/diagram.png)
 
 ## Running the project
 1. Clone the repo
