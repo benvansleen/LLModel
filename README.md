@@ -1,4 +1,4 @@
-# LLModel
+# LLModelica
 ![Diagram](paper/images/diagram.png)
 
 ## Running the project
